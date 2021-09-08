@@ -1,43 +1,49 @@
+use crate::PlotDemo;
 use eframe::{egui, epi};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "persistence", serde(default))] // if we add new fields, give them default values when deserializing old state
-pub struct TemplateApp {
-    // Example stuff:
+pub struct App {
     label: String,
+
+    value: f32,
 
     // this how you opt-out of serialization of a member
     #[cfg_attr(feature = "persistence", serde(skip))]
-    value: f32,
+    plot: PlotDemo,
 }
 
-impl Default for TemplateApp {
+impl Default for App {
     fn default() -> Self {
         Self {
             // Example stuff:
             label: "Hello World!".to_owned(),
             value: 2.7,
+            plot: PlotDemo::default(),
         }
     }
 }
 
-impl epi::App for TemplateApp {
+impl epi::App for App {
     fn name(&self) -> &str {
         "egui template"
     }
 
     /// Called by the framework to load old app state (if any).
-    #[cfg(feature = "persistence")]
+    // #[cfg(feature = "persistence")]
     fn setup(
         &mut self,
         _ctx: &egui::CtxRef,
-        _frame: &mut epi::Frame<'_>,
+        frame: &mut epi::Frame<'_>,
         storage: Option<&dyn epi::Storage>,
     ) {
-        if let Some(storage) = storage {
-            *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
+        if cfg!(feature = "persistence") {
+            if let Some(storage) = storage {
+                *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default()
+            }
         }
+        self.plot.items_demo.load_image(frame);
     }
 
     /// Called by the frame work to save state before shutdown.
@@ -49,7 +55,7 @@ impl epi::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
-        let Self { label, value } = self;
+        let Self { label, value, plot } = self;
 
         // Examples of how to create different panels and windows.
         // Pick whichever suits you.
@@ -99,7 +105,7 @@ impl epi::App for TemplateApp {
             egui::warn_if_debug_build(ui);
         });
 
-        if false {
+        if true {
             egui::Window::new("Window").show(ctx, |ui| {
                 ui.label("Windows can be moved by dragging them.");
                 ui.label("They are automatically sized based on contents.");
@@ -107,5 +113,6 @@ impl epi::App for TemplateApp {
                 ui.label("You would normally chose either panels OR windows.");
             });
         }
+        plot.show(ctx, &mut true);
     }
 }
