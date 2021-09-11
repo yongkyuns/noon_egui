@@ -352,6 +352,7 @@ impl Widget for &mut ItemsDemo {
             );
             Arrows::new(arrow_origins, arrow_tips)
         };
+
         let image = PlotImage::new(
             self.image.texture,
             Value::new(0.0, 10.0),
