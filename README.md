@@ -1,7 +1,7 @@
 # egui template
 
-[![dependency status](https://deps.rs/repo/github/emilk/egui_template/status.svg)](https://deps.rs/repo/github/emilk/egui_template)
-[![Build Status](https://github.com/emilk/egui_template/workflows/CI/badge.svg)](https://github.com/emilk/egui_template/actions?workflow=CI)
+[![dependency status](https://deps.rs/repo/github/yongkyuns/noon_egui/status.svg)](https://deps.rs/repo/github/yongkyuns/noon_egui)
+[![Build Status](https://github.com/yongkyuns/noon_egui/workflows/CI/badge.svg)](https://github.com/yongkyuns/noon_egui/actions?workflow=CI)
 
 This is a template repo for [egui](https://github.com/emilk/egui/).
 
