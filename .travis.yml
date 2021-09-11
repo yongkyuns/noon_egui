@@ -2,6 +2,9 @@ language: rust
 rust:
   - stable
   - nightly
+os:
+  - osx
+  - windows
 jobs:
   allow_failures:
     - rust: nightly
