@@ -9,23 +9,6 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  macos:
-    runs-on: macos-11
-
-    steps:
-      - uses: actions/checkout@v2
-      # - name: Install ARM target
-      #   run: rustup update && rustup target add aarch64-apple-darwin
-      - name: Test
-        run: cargo test --release
-      # - name: Test ARM
-      #   run: cargo test --release --target=aarch64-apple-darwin
-      - name: Make DMG
-        run: make dmg-universal
-      - name: Upload Application
-        run: |
-          mv ./target/release/osx/noon_egui.dmg ./Noon-${GITHUB_REF##*/}.dmg
-          ./.github/workflows/upload_asset.sh ./Noon-${GITHUB_REF##*/}.dmg $GITHUB_TOKEN
 
   windows:
     runs-on: windows-latest
@@ -45,16 +28,34 @@ jobs:
           cp ./target/release/noon_egui.exe ./Noon-${GITHUB_REF##*/}-portable.exe
           ./.github/workflows/upload_asset.sh \
             ./Noon-${GITHUB_REF##*/}-portable.exe $GITHUB_TOKEN
-      - name: Install WiX
-        run: nuget install WiX
-      - name: Create msi installer
-        run: |
-          ./WiX.*/tools/candle.exe -nologo -arch "x64" -ext WixUIExtension -ext WixUtilExtension \
-            -out "./noon_egui.wixobj" "extra/windows/wix/noon_egui.wxs"
-          ./WiX.*/tools/light.exe -nologo -ext WixUIExtension -ext WixUtilExtension \
-            -out "./Noon-${GITHUB_REF##*/}-installer.msi" -sice:ICE61 -sice:ICE91 \
-            "./noon_egui.wixobj"
-      - name: Upload msi installer
-        run: |
-          ./.github/workflows/upload_asset.sh \
-            ./Noon-${GITHUB_REF##*/}-installer.msi $GITHUB_TOKEN
+      # - name: Install WiX
+      #   run: nuget install WiX
+      # - name: Create msi installer
+      #   run: |
+      #     ./WiX.*/tools/candle.exe -nologo -arch "x64" -ext WixUIExtension -ext WixUtilExtension \
+      #       -out "./noon_egui.wixobj" "extra/windows/wix/noon_egui.wxs"
+      #     ./WiX.*/tools/light.exe -nologo -ext WixUIExtension -ext WixUtilExtension \
+      #       -out "./Noon-${GITHUB_REF##*/}-installer.msi" -sice:ICE61 -sice:ICE91 \
+      #       "./noon_egui.wixobj"
+      # - name: Upload msi installer
+      #   run: |
+      #     ./.github/workflows/upload_asset.sh \
+      #       ./Noon-${GITHUB_REF##*/}-installer.msi $GITHUB_TOKEN
+
+  # macos:
+  #   runs-on: macos-11
+
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     # - name: Install ARM target
+  #     #   run: rustup update && rustup target add aarch64-apple-darwin
+  #     - name: Test
+  #       run: cargo test --release
+  #     # - name: Test ARM
+  #     #   run: cargo test --release --target=aarch64-apple-darwin
+  #     - name: Make DMG
+  #       run: make dmg-universal
+  #     - name: Upload Application
+  #       run: |
+  #         mv ./target/release/osx/noon_egui.dmg ./Noon-${GITHUB_REF##*/}.dmg
+  #         ./.github/workflows/upload_asset.sh ./Noon-${GITHUB_REF##*/}.dmg $GITHUB_TOKEN
