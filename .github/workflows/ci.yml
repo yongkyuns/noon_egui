@@ -99,7 +99,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [windows-latest, macos-latest, ubuntu-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -115,11 +115,11 @@ jobs:
         run: |
           rustup component add clippy
           cargo clippy --all-targets
-  check-macos-arm:
-    runs-on: macos-11
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install target
-        run: rustup update && rustup target add aarch64-apple-darwin
-      - name: Check build
-        run: cargo check --target=aarch64-apple-darwin
+  # check-macos-arm:
+  #   runs-on: macos-11
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Install target
+  #       run: rustup update && rustup target add aarch64-apple-darwin
+  #     - name: Check build
+  #       run: cargo check --target=aarch64-apple-darwin
