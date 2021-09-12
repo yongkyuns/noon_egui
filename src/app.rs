@@ -119,7 +119,7 @@ impl epi::App for App {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
     #[test]
     fn test_fail() {
         assert_eq!(1, 1);
