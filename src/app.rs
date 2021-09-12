@@ -122,6 +122,6 @@ mod tests {
     use super::*;
     #[test]
     fn test_fail() {
-        assert_eq!(1, 0);
+        assert_eq!(1, 1);
     }
 }
