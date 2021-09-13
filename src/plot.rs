@@ -1,5 +1,6 @@
-use eframe::egui::{self, *};
-use eframe::epi;
+use nannou_egui::egui;
+use nannou_egui::egui::*;
+
 use plot::{
     Arrows, Corner, HLine, Legend, Line, MarkerShape, Plot, PlotImage, Points, Polygon, Text,
     VLine, Value, Values,
@@ -280,44 +281,9 @@ impl Widget for &mut LegendDemo {
 }
 
 #[derive(PartialEq, Default)]
-pub(crate) struct Image {
-    texture: TextureId,
-    width: u32,
-    height: u32,
-}
+struct ItemsDemo {}
 
-#[derive(PartialEq, Default)]
-pub(crate) struct ItemsDemo {
-    image: Image,
-}
-
-impl ItemsDemo {
-    // #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn load_image(&mut self, frame: &mut epi::Frame<'_>) {
-        // Load the image:
-        let image_data = include_bytes!("../resources/car.png");
-        use image::GenericImageView;
-        let image = image::load_from_memory(image_data).expect("Failed to load image");
-        let image_buffer = image.to_rgba8();
-        let size = (image.width() as usize, image.height() as usize);
-        let pixels = image_buffer.into_vec();
-        assert_eq!(size.0 * size.1 * 4, pixels.len());
-        let pixels: Vec<_> = pixels
-            .chunks_exact(4)
-            .map(|p| egui::Color32::from_rgba_unmultiplied(p[0], p[1], p[2], p[3]))
-            .collect();
-
-        // Allocate a texture:
-        let texture = frame
-            .tex_allocator()
-            .alloc_srgba_premultiplied(size, &pixels);
-        self.image = Image {
-            texture,
-            width: image.width(),
-            height: image.height(),
-        };
-    }
-}
+impl ItemsDemo {}
 
 impl Widget for &mut ItemsDemo {
     fn ui(self, ui: &mut Ui) -> Response {
@@ -352,13 +318,12 @@ impl Widget for &mut ItemsDemo {
             );
             Arrows::new(arrow_origins, arrow_tips)
         };
-
         let image = PlotImage::new(
-            self.image.texture,
+            TextureId::Egui,
             Value::new(0.0, 10.0),
             [
-                self.image.width as f32 / 100.0,
-                self.image.height as f32 / 100.0,
+                ui.fonts().texture().width as f32 / 100.0,
+                ui.fonts().texture().height as f32 / 100.0,
             ],
         );
 
@@ -384,44 +349,6 @@ impl Widget for &mut ItemsDemo {
     }
 }
 
-// #[cfg(not(target_arch = "wasm32"))]
-// impl eframe::epi::TextureAllocator for ItemsDemo {}
-
-// #[cfg(not(target_arch = "wasm32"))]
-// fn upload_png<P: AsRef<Path>>(
-//     egui: &mut egui_glium::EguiGlium,
-//     path: P,
-// ) -> anyhow::Result<(egui::TextureId, emath::Vec2)> {
-//     // Read and decode the image.
-//     let decoder = png::Decoder::new(std::fs::File::open(path)?);
-//     let mut reader = decoder.read_info()?;
-//     // let (info, mut reader) = decoder.read_info()?;
-//     // let mut buf = vec![0; info.buffer_size()];
-//     let mut buf = vec![0; reader.output_buffer_size()];
-//     reader.next_frame(&mut buf).unwrap();
-
-//     // Convert the data to an array of epaint colors.
-//     let mut pixels = Vec::with_capacity(reader.output_buffer_size() / 4);
-//     for rgba in buf.chunks_exact(4) {
-//         match rgba {
-//             &[r, g, b, a] => pixels.push(Color32::from_rgba_unmultiplied(r, g, b, a)),
-//             _ => (),
-//         }
-//     }
-
-//     // Create a new texture and upload the pixels to it.
-//     let (_, painter) = egui.ctx_and_painter_mut();
-//     let id = painter.alloc_user_texture();
-//     painter.set_user_texture(
-//         id,
-//         (reader.info().width as usize, reader.info().height as usize),
-//         &pixels,
-//     );
-
-//     let size = emath::Vec2::new(reader.info().width as f32, reader.info().height as f32);
-//     Ok((id, size))
-// }
-
 #[derive(PartialEq, Eq)]
 enum Panel {
     Lines,
@@ -441,7 +368,7 @@ pub struct PlotDemo {
     line_demo: LineDemo,
     marker_demo: MarkerDemo,
     legend_demo: LegendDemo,
-    pub(crate) items_demo: ItemsDemo,
+    items_demo: ItemsDemo,
     open_panel: Panel,
 }
 
