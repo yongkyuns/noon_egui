@@ -1,7 +1,6 @@
-use iced::canvas::Path;
-
+use crate::appearance::{DEFAULT_FILL_COLOR, DEFAULT_STROKE_COLOR};
 use crate::data::TimeTable;
-use crate::{Pose, WithPath, RED_B, YELLOW_C};
+use crate::Pose;
 use crate::{Spatial, WithSpatial};
 use crate::{Visual, WithVisual};
 
@@ -16,8 +15,8 @@ impl Default for Car {
     fn default() -> Self {
         Self {
             visual: Visual::default()
-                .with_fill_color(YELLOW_C)
-                .with_stroke_color(RED_B),
+                .with_fill_color(DEFAULT_FILL_COLOR)
+                .with_stroke_color(DEFAULT_STROKE_COLOR),
             spatial: Spatial::default().with_width(2.0).with_height(4.0),
             id: 0,
         }
@@ -49,18 +48,18 @@ impl Car {
     //     // Geometry(prim) // This doesn't work
     // }
 
-    pub fn path(&self) -> Path {
-        let top_left = self.size() / -2.0;
-        Path::rectangle(top_left.into(), self.size().into())
-    }
+    // pub fn path(&self) -> Path {
+    //     let top_left = self.size() / -2.0;
+    //     Path::rectangle(top_left.into(), self.size().into())
+    // }
 }
 
-impl WithPath for Car {
-    fn path(&self) -> Path {
-        let top_left = self.size() / -2.0;
-        Path::rectangle(top_left.into(), self.size().into())
-    }
-}
+// impl WithPath for Car {
+//     fn path(&self) -> Path {
+//         let top_left = self.size() / -2.0;
+//         Path::rectangle(top_left.into(), self.size().into())
+//     }
+// }
 
 impl WithSpatial for Car {
     fn get(&self) -> &Spatial {

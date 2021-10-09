@@ -2,6 +2,12 @@ pub use nannou::geom::pt2 as pt;
 pub use nannou::geom::Point2 as Point;
 pub use nannou::geom::Vec2 as Vector;
 
+pub use nannou::lyon::geom::euclid::UnknownUnit;
+
+// impl Into<nannou::lyon::geom::euclid::Point2D<f32, UnknownUnit>> for Point {
+//     fn into(self) -> nannou::lyon::geom::euclid::Point2D<f32, UnknownUnit> {}
+// }
+
 // use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub, SubAssign};
 
 // pub type Vector<T = f32> = Point<T>;

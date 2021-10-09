@@ -2,6 +2,7 @@ pub mod path;
 pub mod primitive;
 pub mod property;
 
+pub use path::Path;
 pub use property::orientation::Angle;
 pub use property::pose::Pose;
 pub use property::position::{pt, Point, Vector};

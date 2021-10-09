@@ -54,8 +54,8 @@ impl Into<Rect> for Size {
 impl Into<Size> for Rect {
     fn into(self) -> Size {
         Size {
-            width: self.width,
-            height: self.height,
+            width: self.w(),
+            height: self.h(),
         }
     }
 }

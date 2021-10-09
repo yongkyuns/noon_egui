@@ -1,6 +1,6 @@
 use super::Step;
-use crate::geom::path::WithPath;
-use crate::{pt, Path, Spatial, Visual, WithSpatial, WithVisual, DARK_GRAY};
+use crate::appearance::color::DARK_GRAY;
+use crate::{Spatial, Visual, WithSpatial, WithVisual};
 
 pub struct Axis {
     visual: Visual,
@@ -40,43 +40,43 @@ impl WithVisual for Axis {
     }
 }
 
-impl WithPath for Axis {
-    fn path(&self) -> Path {
-        Path::new(|builder| {
-            let t = self.tick_size / 2.0;
-            let w = self.width() / 2.0;
-            let h = self.height() / 2.0;
-            let p = pt(self.position().x, -self.position().y);
+// impl WithPath for Axis {
+//     fn path(&self) -> Path {
+//         Path::new(|builder| {
+//             let t = self.tick_size / 2.0;
+//             let w = self.width() / 2.0;
+//             let h = self.height() / 2.0;
+//             let p = pt(self.position().x, -self.position().y);
 
-            // Horizontal axis
-            builder.move_to(pt(w, -p.y).into());
-            builder.line_to(pt(-w, -p.y).into());
-            // Vertical axis
-            builder.move_to(pt(-p.x, h).into());
-            builder.line_to(pt(-p.x, -h).into());
+//             // Horizontal axis
+//             builder.move_to(pt(w, -p.y).into());
+//             builder.line_to(pt(-w, -p.y).into());
+//             // Vertical axis
+//             builder.move_to(pt(-p.x, h).into());
+//             builder.line_to(pt(-p.x, -h).into());
 
-            // Draw only if zoom is close enough to see the grid
-            if w / self.step.x < 50.0 {
-                let step_by = || (0..).map(|i| i as f32 * self.step.x);
-                let r_iter = step_by().map(|f| f - p.x).take_while(|&f| f < w);
-                let l_iter = step_by().map(|f| -f - p.x).take_while(|&f| f > -w);
-                let x_iter = r_iter.chain(l_iter);
-                for x in x_iter {
-                    builder.move_to((pt(x, t - p.y)).into());
-                    builder.line_to((pt(x, -t - p.y)).into());
-                }
-            }
+//             // Draw only if zoom is close enough to see the grid
+//             if w / self.step.x < 50.0 {
+//                 let step_by = || (0..).map(|i| i as f32 * self.step.x);
+//                 let r_iter = step_by().map(|f| f - p.x).take_while(|&f| f < w);
+//                 let l_iter = step_by().map(|f| -f - p.x).take_while(|&f| f > -w);
+//                 let x_iter = r_iter.chain(l_iter);
+//                 for x in x_iter {
+//                     builder.move_to((pt(x, t - p.y)).into());
+//                     builder.line_to((pt(x, -t - p.y)).into());
+//                 }
+//             }
 
-            if h / self.step.y < 50.0 {
-                let step_by = || (0..).map(|i| i as f32 * self.step.y);
-                let u_iter = step_by().map(|f| f - p.y).take_while(|&f| f < h);
-                let d_iter = step_by().map(|f| -f - p.y).take_while(|&f| f > -h);
-                let y_iter = u_iter.chain(d_iter);
-                for y in y_iter {
-                    builder.move_to((pt(t - p.x, y)).into());
-                    builder.line_to((pt(-t - p.x, y)).into());
-                }
-            }
-        })
-    }
-}
+//             if h / self.step.y < 50.0 {
+//                 let step_by = || (0..).map(|i| i as f32 * self.step.y);
+//                 let u_iter = step_by().map(|f| f - p.y).take_while(|&f| f < h);
+//                 let d_iter = step_by().map(|f| -f - p.y).take_while(|&f| f > -h);
+//                 let y_iter = u_iter.chain(d_iter);
+//                 for y in y_iter {
+//                     builder.move_to((pt(t - p.x, y)).into());
+//                     builder.line_to((pt(-t - p.x, y)).into());
+//                 }
+//             }
+//         })
+//     }
+// }

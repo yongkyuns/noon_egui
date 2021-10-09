@@ -1,8 +1,7 @@
 use super::Step;
-use crate::geom::path::WithPath;
-use crate::{pt, Path, Spatial, Visual, WithSpatial, WithVisual, DARKER_GRAY};
-
-use iced::canvas::Stroke;
+use crate::appearance::Stroke;
+// use crate::geom::path::WithPath;
+use crate::{Spatial, Visual, WithSpatial, WithVisual};
 
 pub struct Grid {
     visual: Visual,
@@ -13,7 +12,7 @@ pub struct Grid {
 impl Default for Grid {
     fn default() -> Self {
         Self {
-            visual: Visual::Stroke(Stroke::default().with_color(DARKER_GRAY)),
+            visual: Visual::Stroke(Stroke::default()),
             spatial: Spatial::default(),
             step: Step::default(),
         }
@@ -38,34 +37,34 @@ impl WithVisual for Grid {
     }
 }
 
-impl WithPath for Grid {
-    fn path(&self) -> Path {
-        Path::new(|builder| {
-            let w = self.width() / 2.0;
-            let h = self.height() / 2.0;
-            let p = pt(self.position().x, -self.position().y);
+// impl WithPath for Grid {
+//     fn path(&self) -> Path {
+//         Path::new(|builder| {
+//             let w = self.width() / 2.0;
+//             let h = self.height() / 2.0;
+//             let p = pt(self.position().x, -self.position().y);
 
-            if w / self.step.x < 50.0 {
-                let step_by = || (0..).map(|i| i as f32 * self.step.x);
-                let r_iter = step_by().map(|f| f - p.x).take_while(|&f| f < w);
-                let l_iter = step_by().map(|f| -f - p.x).take_while(|&f| f > -w);
-                let x_iter = r_iter.chain(l_iter);
-                for x in x_iter {
-                    builder.move_to(pt(x, h).into());
-                    builder.line_to(pt(x, -h).into());
-                }
-            }
+//             if w / self.step.x < 50.0 {
+//                 let step_by = || (0..).map(|i| i as f32 * self.step.x);
+//                 let r_iter = step_by().map(|f| f - p.x).take_while(|&f| f < w);
+//                 let l_iter = step_by().map(|f| -f - p.x).take_while(|&f| f > -w);
+//                 let x_iter = r_iter.chain(l_iter);
+//                 for x in x_iter {
+//                     builder.move_to(pt(x, h).into());
+//                     builder.line_to(pt(x, -h).into());
+//                 }
+//             }
 
-            if h / self.step.y < 50.0 {
-                let step_by = || (0..).map(|i| i as f32 * self.step.y);
-                let u_iter = step_by().map(|f| f - p.y).take_while(|&f| f < h);
-                let d_iter = step_by().map(|f| -f - p.y).take_while(|&f| f > -h);
-                let y_iter = u_iter.chain(d_iter);
-                for y in y_iter {
-                    builder.move_to(pt(w, y).into());
-                    builder.line_to(pt(-w, y).into());
-                }
-            }
-        })
-    }
-}
+//             if h / self.step.y < 50.0 {
+//                 let step_by = || (0..).map(|i| i as f32 * self.step.y);
+//                 let u_iter = step_by().map(|f| f - p.y).take_while(|&f| f < h);
+//                 let d_iter = step_by().map(|f| -f - p.y).take_while(|&f| f > -h);
+//                 let y_iter = u_iter.chain(d_iter);
+//                 for y in y_iter {
+//                     builder.move_to(pt(w, y).into());
+//                     builder.line_to(pt(-w, y).into());
+//                 }
+//             }
+//         })
+//     }
+// }

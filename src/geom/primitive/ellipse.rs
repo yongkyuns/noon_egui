@@ -1,7 +1,5 @@
-use crate::geom::path::WithPath;
-use crate::{Path, Visual, WithVisual};
 use crate::{Spatial, WithSpatial};
-use iced::Point;
+use crate::{Visual, WithVisual};
 
 #[derive(Debug)]
 pub struct Circle(Ellipse);
@@ -43,11 +41,11 @@ impl WithVisual for Circle {
     }
 }
 
-impl WithPath for Circle {
-    fn path(&self) -> Path {
-        Path::circle(Point::ORIGIN, self.radius())
-    }
-}
+// impl WithPath for Circle {
+//     fn path(&self) -> Path {
+//         Path::circle(Point::ORIGIN, self.radius())
+//     }
+// }
 
 pub fn circle() -> Circle {
     Circle(ellipse())
@@ -78,20 +76,20 @@ impl Ellipse {
     }
 }
 
-impl WithPath for Ellipse {
-    fn path(&self) -> Path {
-        use iced_graphics::canvas::path::arc::Elliptical;
-        Path::new(|builder| {
-            builder.ellipse(Elliptical {
-                center: Point::ORIGIN,
-                radii: iced::Vector::new(self.radii().0, self.radii().1),
-                rotation: self.angle(),
-                start_angle: 0.0,
-                end_angle: std::f32::consts::PI,
-            });
-        })
-    }
-}
+// impl WithPath for Ellipse {
+//     fn path(&self) -> Path {
+//         use iced_graphics::canvas::path::arc::Elliptical;
+//         Path::new(|builder| {
+//             builder.ellipse(Elliptical {
+//                 center: Point::ORIGIN,
+//                 radii: iced::Vector::new(self.radii().0, self.radii().1),
+//                 rotation: self.angle(),
+//                 start_angle: 0.0,
+//                 end_angle: std::f32::consts::PI,
+//             });
+//         })
+//     }
+// }
 
 impl WithSpatial for Ellipse {
     fn get(&self) -> &Spatial {

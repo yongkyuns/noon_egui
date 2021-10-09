@@ -4,7 +4,8 @@ use std::{
     rc::Rc,
 };
 
-use crate::{Pose, Time};
+pub type Time = f32;
+use crate::Pose;
 
 /// Aggregate of [`ColumnData`] that can only be added and not deleted.
 /// Length of all [`ColumnData`] are equal, making this effectively a 2D table.

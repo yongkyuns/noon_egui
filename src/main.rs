@@ -1,3 +1,4 @@
+#![allow(unused)]
 // #![forbid(unsafe_code)]
 // #![cfg_attr(not(debug_assertions), deny(warnings))] // Forbid warnings in release builds
 // #![warn(clippy::all, rust_2018_idioms)]
@@ -15,11 +16,14 @@ use nannou::{color::rgb_u32, rand::thread_rng};
 use nannou::{prelude::*, rand::prelude::SliceRandom};
 use nannou_egui::{self, egui, Egui};
 
+pub use crate::appearance::{Color, Visual, WithVisual};
+pub use crate::geom::Path;
 pub use crate::geom::{pt, Angle, Point, Pose, Rect, Size, Spatial, Vector, WithSpatial};
 
 mod appearance;
 mod data;
 mod geom;
+mod math;
 mod plot;
 
 const WIDTH: f32 = 1920.0;
@@ -71,13 +75,15 @@ impl SvgPath {
     }
 }
 
-fn point(x: &f64, y: &f64) -> Point {
-    Point::new((*x) as f32, (*y) as f32)
+fn point(x: &f64, y: &f64) -> Point2D<f32, UnknownUnit> {
+    Point2D::new((*x) as f32, (*y) as f32)
 }
+
+use nannou::lyon::geom::euclid::{Point2D, UnknownUnit};
 pub struct PathConvIter<'a> {
     iter: std::slice::Iter<'a, usvg::PathSegment>,
-    prev: Point,
-    first: Point,
+    prev: Point2D<f32, UnknownUnit>,
+    first: Point2D<f32, UnknownUnit>,
     needs_end: bool,
     deferred: Option<PathEvent>,
 }
@@ -165,8 +171,8 @@ impl<'l> Iterator for PathConvIter<'l> {
 pub fn convert_path<'a>(p: &'a usvg::Path) -> PathConvIter<'a> {
     PathConvIter {
         iter: p.segments.iter(),
-        first: Point::new(0.0, 0.0),
-        prev: Point::new(0.0, 0.0),
+        first: Point2D::new(0.0, 0.0),
+        prev: Point2D::new(0.0, 0.0),
         deferred: None,
         needs_end: false,
     }
