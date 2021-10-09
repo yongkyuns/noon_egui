@@ -9,14 +9,12 @@ edition = "2018"
 [dependencies]
 nannou_egui = { version = "0.4"}
 nannou = "0.17"
-egui_demo_lib = { version = "0.13" }
+# egui_demo_lib = { version = "0.13" }
 serde = { version = "1", features = ["derive"], optional = true }
-# eframe = "0.14.0" # Gives us egui, epi and web+native backends
-# image = { version = "0.23", default-features = false, features = ["png"] }
+usvg = "0.4"
 
 [features]
 default = ["persistence"]
-# http = ["eframe/http"] # Enable if you want to do http requests
 persistence = ["serde"] # Enable if you want to persist app state on shutdown
 
 # [profile.release]

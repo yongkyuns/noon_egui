@@ -3,12 +3,23 @@
 // #![warn(clippy::all, rust_2018_idioms)]
 // #![cfg(not(target_arch = "wasm32"))]
 
+// use std::path::PathBuf;
+
 // When compiling natively:
 use crate::plot::PlotDemo;
+// use nannou::image;
+// use nannou::lyon::math::Point;
+use nannou::lyon::path::PathEvent;
+// use nannou::wgpu::DeviceQueuePair;
 use nannou::{color::rgb_u32, rand::thread_rng};
 use nannou::{prelude::*, rand::prelude::SliceRandom};
 use nannou_egui::{self, egui, Egui};
 
+pub use crate::geom::{pt, Angle, Point, Pose, Rect, Size, Spatial, Vector, WithSpatial};
+
+mod appearance;
+mod data;
+mod geom;
 mod plot;
 
 const WIDTH: f32 = 1920.0;
@@ -36,6 +47,129 @@ struct Model {
     settings: Settings,
     egui: Egui,
     plot_demo: PlotDemo,
+    image: wgpu::Texture,
+    svg: SvgPath,
+}
+#[derive(Clone)]
+struct SvgPath {
+    events: Vec<PathEvent>,
+    weight: f32,
+    color: Rgba,
+    width: f32,
+    height: f32,
+}
+
+impl SvgPath {
+    fn new(events: Vec<PathEvent>, weight: f32, color: Rgba, width: f32, height: f32) -> Self {
+        SvgPath {
+            events,
+            weight,
+            color,
+            width,
+            height,
+        }
+    }
+}
+
+fn point(x: &f64, y: &f64) -> Point {
+    Point::new((*x) as f32, (*y) as f32)
+}
+pub struct PathConvIter<'a> {
+    iter: std::slice::Iter<'a, usvg::PathSegment>,
+    prev: Point,
+    first: Point,
+    needs_end: bool,
+    deferred: Option<PathEvent>,
+}
+
+impl<'l> Iterator for PathConvIter<'l> {
+    type Item = PathEvent;
+    fn next(&mut self) -> Option<PathEvent> {
+        if self.deferred.is_some() {
+            return self.deferred.take();
+        }
+
+        let next = self.iter.next();
+        match next {
+            Some(usvg::PathSegment::MoveTo { x, y }) => {
+                if self.needs_end {
+                    let last = self.prev;
+                    let first = self.first;
+                    self.needs_end = false;
+                    self.prev = point(x, y);
+                    self.deferred = Some(PathEvent::Begin { at: self.prev });
+                    self.first = self.prev;
+                    Some(PathEvent::End {
+                        last,
+                        first,
+                        close: false,
+                    })
+                } else {
+                    self.first = point(x, y);
+                    Some(PathEvent::Begin { at: self.first })
+                }
+            }
+            Some(usvg::PathSegment::LineTo { x, y }) => {
+                self.needs_end = true;
+                let from = self.prev;
+                self.prev = point(x, y);
+                Some(PathEvent::Line {
+                    from,
+                    to: self.prev,
+                })
+            }
+            Some(usvg::PathSegment::CurveTo {
+                x1,
+                y1,
+                x2,
+                y2,
+                x,
+                y,
+            }) => {
+                self.needs_end = true;
+                let from = self.prev;
+                self.prev = point(x, y);
+                Some(PathEvent::Cubic {
+                    from,
+                    ctrl1: point(x1, y1),
+                    ctrl2: point(x2, y2),
+                    to: self.prev,
+                })
+            }
+            Some(usvg::PathSegment::ClosePath) => {
+                self.needs_end = false;
+                self.prev = self.first;
+                Some(PathEvent::End {
+                    last: self.prev,
+                    first: self.first,
+                    close: true,
+                })
+            }
+            None => {
+                if self.needs_end {
+                    self.needs_end = false;
+                    let last = self.prev;
+                    let first = self.first;
+                    Some(PathEvent::End {
+                        last,
+                        first,
+                        close: false,
+                    })
+                } else {
+                    None
+                }
+            }
+        }
+    }
+}
+pub fn convert_path<'a>(p: &'a usvg::Path) -> PathConvIter<'a> {
+    PathConvIter {
+        iter: p.segments.iter(),
+        first: Point::new(0.0, 0.0),
+        prev: Point::new(0.0, 0.0),
+        deferred: None,
+        needs_end: false,
+    }
 }
 
 fn model(app: &App) -> Model {
@@ -50,6 +184,41 @@ fn model(app: &App) -> Model {
     let window = app.window(window_id).unwrap();
     let egui = Egui::from_window(&window);
     let plot_demo = PlotDemo::default();
+
+    let asset = app.assets_path().unwrap().join("car.svg");
+    let opt = usvg::Options::default();
+    let rtree = usvg::Tree::from_file(&asset, &opt).unwrap();
+    let view_box = rtree.svg_node().view_box;
+
+    let mut svg: Option<SvgPath> = None;
+    for node in rtree.root().descendants() {
+        if let usvg::NodeKind::Path(ref p) = *node.borrow() {
+            if let Some(ref stroke) = p.stroke {
+                let color = match stroke.paint {
+                    usvg::Paint::Color(c) => rgba(
+                        c.red as f32 / 255.0,
+                        c.green as f32 / 255.0,
+                        c.blue as f32 / 255.0,
+                        1.0,
+                    ),
+                    _ => rgba(0.0, 0.0, 0.0, 1.0),
+                };
+
+                let path_events = convert_path(p);
+                let mut v = Vec::new();
+                for e in path_events {
+                    v.push(e);
+                }
+                let w = view_box.rect.size().width as f32;
+                let h = view_box.rect.size().height as f32;
+                svg = Some(SvgPath::new(v, stroke.width.value() as f32, color, w, h));
+            }
+        }
+    }
+    let img_path = app.assets_path().unwrap().join("car.png");
+    // let image = image::open(img_path).unwrap();
+    let image = wgpu::Texture::from_path(app, img_path).unwrap();
+
     Model {
         circles: Vec::new(),
         egui,
@@ -59,8 +228,23 @@ fn model(app: &App) -> Model {
             circle_count: 10,
         },
         plot_demo,
+        image,
+        svg: svg.unwrap(),
     }
 }
+
+struct Image {
+    image: wgpu::Texture,
+    pub width: usize,
+    pub height: usize,
+    pub angle: f32,
+}
+
+// impl Image {
+//     fn new(img_path: PathBuf, app: &App) -> Self {
+//         let image = wgpu::Texture::from_path(app, img_path).unwrap();
+//     }
+// }
 
 fn update(_app: &App, model: &mut Model, update: Update) {
     let Model {
@@ -108,12 +292,26 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .color(circle.color);
     }
 
+    let e = model.svg.events.iter().cloned();
+
+    let img_size = model.image.size();
+    let scale = 5.0;
+    draw.texture(&model.image)
+        .z_turns(0.125)
+        .w_h((img_size[0] as f32) / scale, (img_size[1] as f32) / scale);
+
+    draw.path().fill().color(WHITE).events(e).x_y(0.0, 0.0);
+
+    draw.line()
+        .points(pt2(0.0, 0.0), pt2(10.0, 10.0))
+        .color(WHITE);
+
     draw.to_frame(app, &frame).unwrap();
 
     model.egui.draw_to_frame(&frame);
 }
 
-fn intersects(circle: &Circle, circles: &Vec<Circle>) -> bool {
+fn intersects(circle: &Circle, circles: &[Circle]) -> bool {
     for other in circles.iter() {
         let dist: f32 =
             ((other.x - circle.x).pow(2) as f32 + (other.y - circle.y).pow(2) as f32).sqrt();
