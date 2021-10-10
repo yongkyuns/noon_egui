@@ -46,9 +46,15 @@ pub trait WithSpatial: Sized {
         self.get_mut().position = position;
         self
     }
+    fn move_to_mut(&mut self, position: Point) {
+        self.get_mut().position = position;
+    }
     fn move_by(mut self, position: Point) -> Self {
         self.get_mut().position += position;
         self
+    }
+    fn move_by_mut(&mut self, position: Point) {
+        self.get_mut().position += position;
     }
     fn with_pose(mut self, pose: Pose) -> Self {
         self.get_mut().position = pt(pose.x, pose.y);
@@ -58,6 +64,9 @@ pub trait WithSpatial: Sized {
     fn set_pose(&mut self, pose: Pose) {
         self.get_mut().position = pt(pose.x, pose.y);
         self.get_mut().orientation = pose.angle();
+    }
+    fn set_angle(&mut self, angle: Angle) {
+        self.get_mut().orientation = angle;
     }
     fn with_angle(self, angle: Angle) -> Self {
         self.rotate_to(angle)
@@ -69,6 +78,9 @@ pub trait WithSpatial: Sized {
     fn rotate_by(mut self, angle: Angle) -> Self {
         self.get_mut().orientation += angle;
         self
+    }
+    fn rotate_by_mut(&mut self, angle: Angle) {
+        self.get_mut().orientation += angle;
     }
     fn with_size(mut self, size: Size) -> Self {
         self.get_mut().size = size;

@@ -8,10 +8,7 @@
 
 // When compiling natively:
 use crate::plot::PlotDemo;
-// use nannou::image;
-// use nannou::lyon::math::Point;
 use nannou::lyon::path::PathEvent;
-// use nannou::wgpu::DeviceQueuePair;
 use nannou::{color::rgb_u32, rand::thread_rng};
 use nannou::{prelude::*, rand::prelude::SliceRandom};
 use nannou_egui::{self, egui, Egui};
@@ -25,6 +22,9 @@ mod data;
 mod geom;
 mod math;
 mod plot;
+mod vehicle;
+
+pub type S = f32;
 
 const WIDTH: f32 = 1920.0;
 const HEIGHT: f32 = 1080.0;
