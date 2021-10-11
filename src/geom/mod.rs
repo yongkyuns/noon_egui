@@ -9,7 +9,7 @@ pub use property::position::{pt, Point, Vector};
 pub use property::rect::Rect;
 pub use property::size::Size;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Spatial {
     position: Point,
     orientation: Angle,

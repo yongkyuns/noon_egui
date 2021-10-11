@@ -51,7 +51,7 @@ impl Default for Stroke {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Visual {
     Fill(Fill),
     Stroke(Stroke),

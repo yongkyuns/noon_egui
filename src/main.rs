@@ -12,10 +12,12 @@ use nannou::lyon::path::PathEvent;
 use nannou::{color::rgb_u32, rand::thread_rng};
 use nannou::{prelude::*, rand::prelude::SliceRandom};
 use nannou_egui::{self, egui, Egui};
+use vehicle::{HasVehicleState, Vehicle};
 
 pub use crate::appearance::{Color, Visual, WithVisual};
 pub use crate::geom::Path;
 pub use crate::geom::{pt, Angle, Point, Pose, Rect, Size, Spatial, Vector, WithSpatial};
+use crate::vehicle::vehicle;
 
 mod appearance;
 mod data;
@@ -53,7 +55,9 @@ struct Model {
     plot_demo: PlotDemo,
     image: wgpu::Texture,
     svg: SvgPath,
+    vehicle: Vehicle,
 }
+
 #[derive(Clone)]
 struct SvgPath {
     events: Vec<PathEvent>,
@@ -225,6 +229,13 @@ fn model(app: &App) -> Model {
     // let image = image::open(img_path).unwrap();
     let image = wgpu::Texture::from_path(app, img_path).unwrap();
 
+    let mut vehicle = vehicle();
+    let now = std::time::Instant::now();
+    for _ in 0..100000 {
+        vehicle.step_full(20. * PI / 180.);
+    }
+    println!("{}", now.elapsed().as_micros());
+
     Model {
         circles: Vec::new(),
         egui,
@@ -236,6 +247,7 @@ fn model(app: &App) -> Model {
         plot_demo,
         image,
         svg: svg.unwrap(),
+        vehicle,
     }
 }
 
@@ -282,7 +294,7 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     plot_demo.show(&ctx, &mut true);
 }
 
-fn raw_window_event(_app: &App, model: &mut Model, event: &nannou::winit::event::WindowEvent) {
+fn raw_window_event(app: &App, model: &mut Model, event: &nannou::winit::event::WindowEvent) {
     model.egui.handle_raw_event(event);
 }
 
@@ -300,11 +312,18 @@ fn view(app: &App, model: &Model, frame: Frame) {
 
     let e = model.svg.events.iter().cloned();
 
-    let img_size = model.image.size();
-    let scale = 5.0;
-    draw.texture(&model.image)
-        .z_turns(0.125)
-        .w_h((img_size[0] as f32) / scale, (img_size[1] as f32) / scale);
+    if let Some(state) = model.vehicle.history.get_at_time(app.time) {
+        let zoom = 10.0;
+        let pos = state.position() * zoom;
+        let ang = state.angle();
+        let img_size = model.image.size();
+        let scale = 378.0 / zoom;
+
+        draw.texture(&model.image)
+            .x_y(pos.x, pos.y)
+            .z_radians(ang)
+            .w_h((img_size[0] as f32) / scale, (img_size[1] as f32) / scale);
+    }
 
     draw.path().fill().color(WHITE).events(e).x_y(0.0, 0.0);
 

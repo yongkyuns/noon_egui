@@ -11,7 +11,7 @@ use crate::Pose;
 /// Length of all [`ColumnData`] are equal, making this effectively a 2D table.
 pub type DataSet<T = f32> = Vec<ColumnData<T>>;
 
-/// Easily accessible wrapper around [`TimeTable`] to be shared by multiple widgets
+/// Easily accessible wrapper around [`TimeTable`] to be shared by multiple owners
 pub struct DataStore(pub(crate) Rc<RefCell<TimeTable<Pose>>>);
 
 impl Default for DataStore {
@@ -247,19 +247,27 @@ impl<T: Clone> TimeTable<T> {
 pub struct TimeSeries<T> {
     time: Timeline,
     data: ColumnData<T>,
+    sample_time: Time,
 }
 
 impl<T: Clone> TimeSeries<T> {
+    /// Create a new [`TimeSeries`] from given array of `time` and `data`.
     pub fn new(time: impl Into<Vec<Time>>, data: impl Into<Vec<T>>) -> Self {
         let time = Timeline::new(time.into());
         let data = ColumnData::from_vec(data);
+        let sample_time = 0.0;
 
         if time.len() != data.len() {
             panic!("Size of time and data are different!");
         }
-        Self { time, data }
+        Self {
+            time,
+            data,
+            sample_time,
+        }
     }
 
+    /// Create an empty [`TimeSeries`]
     pub fn empty() -> Self {
         Self {
             time: Timeline::default(),
@@ -267,16 +275,49 @@ impl<T: Clone> TimeSeries<T> {
                 data: Vec::new(),
                 name: None,
             },
+            sample_time: 0.0,
         }
     }
 
+    /// Sets the `sample_time` of the [`TimeSeries`]. If `add` is called with timestamp
+    /// that is smaller than the sum of the last timestamp and `sample_time`, `add` will
+    /// not push the data into the [`TimeSeries`]. When `sample_time` is set to zero (by default),
+    /// `add` will only discard data points whose timestamp is identical to the last timestamp,
+    /// i.e. it only guarantees monotonically increasing timestamps.
+    pub fn with_sample_time(mut self, sample_time: Time) -> Self {
+        self.sample_time = sample_time;
+        self
+    }
+
     pub fn add(&mut self, time: Time, element: T) {
-        self.time.add(time);
-        self.data.add(element);
+        // if let Some(last) = self.time.vec.last() {
+        //     if last + self.sample_time < time {
+        //         self.time.add(time);
+        //         self.data.add(element);
+        //     }
+        // } else {
+        //     self.time.add(time);
+        //     self.data.add(element);
+        // }
+        if self.time.vec.is_empty() {
+            self.time.add(time);
+            self.data.add(element);
+        } else {
+            if self.sample_time > 0.0 {
+                if self.time.vec.last().unwrap() + self.sample_time <= time {
+                    self.time.add(time);
+                    self.data.add(element);
+                }
+            } else {
+                if self.time.vec.last().unwrap() < &time {
+                    self.time.add(time);
+                    self.data.add(element);
+                }
+            }
+        }
     }
 
     /// Get data element for a given time
-    #[allow(dead_code)]
     pub fn get_at_time(&self, time: Time) -> Option<T> {
         self.time
             .get_index(time)
@@ -353,6 +394,24 @@ mod tests {
     fn series_to_table() {
         let ts = dummy_f32();
         let _table: TimeTable<f32> = ts.into();
+    }
+
+    #[test]
+    fn check_sample_time() {
+        let mut ts = TimeSeries::<f32>::empty();
+        ts.add(0.0, 1.0);
+        ts.add(0.0, 2.0); // This shouldn't be added
+        ts.add(0.5, 3.0);
+        ts.add(0.5, 4.0); // This shouldn't be added
+        assert_eq!(0, ts.time.get_index(0.0).unwrap());
+        assert_eq!(1, ts.time.get_index(0.5).unwrap());
+
+        let mut ts = TimeSeries::<f32>::empty().with_sample_time(0.1);
+        ts.add(0.0, 1.0);
+        ts.add(0.05, 2.0); // This shouldn't be added
+        ts.add(0.1, 3.0);
+        assert_eq!(0, ts.time.get_index(0.0).unwrap());
+        assert_eq!(1, ts.time.get_index(0.1).unwrap());
     }
 }
 

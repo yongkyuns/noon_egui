@@ -17,8 +17,8 @@ pub use self::info::{HasVehicleInfo, VehicleInfo};
 pub use self::state::{HasVehicleState, PoseUpdate, VehicleState};
 pub use self::tire::{HasTire, Tire};
 
+use crate::data::{TimeSeries, TimeTable};
 use crate::geom::{Angle, Point};
-// use crate::logging::Log;
 use crate::{Spatial, WithSpatial, S};
 
 pub fn vehicle() -> Vehicle {
@@ -32,7 +32,7 @@ pub struct Vehicle {
     dynamics: Model,
     speed_controller: PID,
     pub t: S,
-    // pub history: Log,
+    pub history: TimeSeries<VehicleState>,
 }
 
 impl Vehicle {
@@ -40,8 +40,7 @@ impl Vehicle {
         let mut vehicle_info = VehicleInfo::new();
         let dynamics = BicycleFull::new(&mut vehicle_info).into();
         let t = 0.0;
-        // let history = Log::new();
-        let P = 100000.0;
+        let P = 10000.0;
         let I = 00.0;
         let D = 00.0;
         let speed_controller = PID::new(P, I, D, vehicle_info.velocity());
@@ -50,7 +49,7 @@ impl Vehicle {
             speed_controller,
             dynamics,
             t,
-            // history,
+            history: TimeSeries::empty().with_sample_time(0.01),
         }
     }
 
@@ -60,14 +59,8 @@ impl Vehicle {
     }
 
     fn update_history(&mut self) {
-        let t = self.t;
-        let x = self.position().x;
-        let y = self.position().y;
-        let heading = self.angle();
-        let vel = self.velocity();
-        let lat_vel = self.vel_lat();
-        let yaw_rate = self.yaw_rate();
-        // self.history.push(t, x, y, heading, vel, lat_vel, yaw_rate);
+        let state = *self.state();
+        self.history.add(self.t, state);
     }
 
     pub fn step_simple(&mut self, rwa: S) {

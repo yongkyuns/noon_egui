@@ -2,7 +2,7 @@
 use crate::S;
 use crate::{pt, Spatial, Visual, WithSpatial, WithVisual};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct VehicleState {
     Vx: S,
     Vy: S,
@@ -11,11 +11,17 @@ pub struct VehicleState {
     RWA: S,
     dPSI: S,
     spatial: Spatial,
-    visual: Visual,
+    // visual: Visual,
 }
 
 impl VehicleState {
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for VehicleState {
+    fn default() -> Self {
         Self {
             Vx: 30.0,
             Vy: 0.0,
@@ -24,7 +30,7 @@ impl VehicleState {
             Fxr: 0.0,
             dPSI: 0.0,
             spatial: Spatial::default(),
-            visual: Visual::default(),
+            // visual: Visual::default(),
         }
     }
 }
@@ -38,14 +44,14 @@ impl WithSpatial for VehicleState {
     }
 }
 
-impl WithVisual for VehicleState {
-    fn get(&self) -> &Visual {
-        &self.visual
-    }
-    fn get_mut(&mut self) -> &mut Visual {
-        &mut self.visual
-    }
-}
+// impl WithVisual for VehicleState {
+//     fn get(&self) -> &Visual {
+//         &self.visual
+//     }
+//     fn get_mut(&mut self) -> &mut Visual {
+//         &mut self.visual
+//     }
+// }
 
 pub trait PoseUpdate {
     fn update_pose(&mut self, dt: S);
